@@ -1,43 +1,59 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
-interface anyProps {
+interface PropsObject {
   [key: string]: any;
 }
 
-const Chat = ({ socket, username, room }: anyProps) => {
-  const [currentMessage, setCurrentMessage] = useState<string>("");
+function Chat({ socket, username, room }: PropsObject) {
+  const [currentMessage, setCurrentMessage] = useState("");
+
   const sendMessage = async () => {
-    const messageData = {
-      room: room,
-      author: username,
-      message: currentMessage,
-      time:
-        new Date(Date.now()).getHours() +
-        ":" +
-        new Date(Date.now()).getMinutes(),
-    };
-    await socket.emit("sendMessage", messageData);
+    if (currentMessage !== "") {
+      const messageData = {
+        room: room,
+        author: username,
+        message: currentMessage,
+        time:
+          new Date(Date.now()).getHours() +
+          ":" +
+          new Date(Date.now()).getMinutes(),
+      };
+
+      await socket.emit("send_message", messageData);
+      // setMessageList((list) => [...list, messageData]);
+      setCurrentMessage("");
+    }
   };
 
-  socket.on("receiveMessage", (data: any) => {
-    console.log(data);
-    console.log("Reiceive Message Client");
-  });
+  useEffect(() => {
+    socket.on("receive_message", (data: any) => {
+      console.log("Receivemessage");
+      console.log(data);
+      // setMessageList((list) => [...list, data]);
+    });
+  }, [socket]);
 
   return (
-    <div>
-      <h3>Chat socket</h3>
-      <div className="chat-body"></div>
-      <div className="chat-input">
-        <input
-          onChange={(event: React.SyntheticEvent<HTMLInputElement>) => {
-            setCurrentMessage(event.currentTarget.value);
-          }}
-        />
-        <button onClick={sendMessage}>Send</button>
+    <div className="chat-window">
+      <div className="chat-header">
+        <p>Live Chat</p>
       </div>
+      <div className="chat-body"></div>
+      <div className="chat-footer"></div>
+      <input
+        type="text"
+        value={currentMessage}
+        placeholder="Hey..."
+        onChange={(event) => {
+          setCurrentMessage(event.target.value);
+        }}
+        onKeyPress={(event) => {
+          event.key === "Enter" && sendMessage();
+        }}
+      />
+      <button onClick={sendMessage}>Sending</button>
     </div>
   );
-};
+}
 
 export default Chat;

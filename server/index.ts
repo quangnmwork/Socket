@@ -13,18 +13,19 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket: any) => {
-  console.log("User connected", socket.id);
-  socket.on("disconnect", () => {
-    console.log("User Disconnected", socket.id);
-  });
-  socket.on("sendMessage", (data: any) => {
-    console.log(data);
-    socket.to(data.room).emit("receiveMessage", data.message);
+  console.log(`User Connected: ${socket.id}`);
+
+  socket.on("join_room", (data: any) => {
+    socket.join(data);
+    console.log(`User with ID: ${socket.id} joined room: ${data}`);
   });
 
-  socket.on("joinRoom", (data: string) => {
-    socket.join(data);
-    console.log(`One user has join room ${data}`);
+  socket.on("send_message", (data: any) => {
+    socket.to(data.room).emit("receive_message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User Disconnected", socket.id);
   });
 });
 
